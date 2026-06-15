@@ -5,72 +5,60 @@ Created on Wed May 25 17:54:34 2022
 
 @author: armin
 """
-
 import pandas as pd
+import numpy as np
+from sklearn.neighbors import NearestNeighbors
 
-#Reading data from Excel
-df1 = pd.read_excel('Data8.xlsx',index_col=(0))
-df2 = pd.read_excel('0444.xlsx',index_col=(0))
-"""
-#Deleting Extra Data (optional/talk with aouthor)
-#(Be careful)
-df1.drop("Luminate", inplace = True, axis = 1)
-df1.drop("L/val", inplace = True, axis = 1)
+# ---------------------------
+# Load data
+# ---------------------------
+df1 = pd.read_excel('Data8.xlsx', index_col=0)
+df2 = pd.read_excel('0444.xlsx', index_col=0)
 
+# Extract feature vectors
+X1 = df1[['X', 'Y', 'val']].to_numpy()
+X2 = df2[['X', 'Y', 'val']].to_numpy()
 
-df2.drop("Luminate", inplace = True, axis = 1)
-df2.drop("L/val", inplace = True, axis = 1)
-"""
+# ---------------------------
+# Build nearest-neighbor models
+# ---------------------------
+nn1 = NearestNeighbors(n_neighbors=1).fit(X1)
+nn2 = NearestNeighbors(n_neighbors=1).fit(X2)
 
-#Listing wanted data for calculating
-X1 = df1['X'].tolist()
-X2 = df2['X'].tolist()
+# df1 -> df2 nearest neighbor
+dist12, idx12 = nn2.kneighbors(X1)
 
-Y1 = df1['Y'].tolist()
-Y2 = df2['Y'].tolist()
+# df2 -> df1 nearest neighbor
+dist21, idx21 = nn1.kneighbors(X2)
 
-val1 = df1['val'].tolist()
-val2 = df2['val'].tolist()
+# ---------------------------
+# Mutual nearest neighbor matching
+# ---------------------------
+matched_df1 = []
+matched_df2 = []
 
-Match = []
-Error = 0   #Error function
-
+used_df2 = set()
 
 for i in range(len(X1)):
-    Min_Error = 3*len(X1) #Minimum Error function for detecting
-    counter = -1
-    for j in range(len(X2)):
-        if val2[j] != 0:
-            Error = 0
-            Error += (X1[i]-X2[j])**2 + (Y1[i]-Y2[j])**2 + (val1[i]-val2[j])**2
-        if Error < Min_Error :
-            Min_Error = Error
-            counter = j
-    Min_Error = 3*len(X1)
-    if counter != -1:   #Rechecking from opposite
-        check = -1
-        for k in range(i,len(X1)):
-            Error=0
-            Error += (X2[counter]-X1[k])**2 + (Y2[counter]-Y1[k])**2 + (val2[counter]-val1[k])**2
-            if Error < Min_Error :
-                Min_Error = Error
-                check = k
-    if i == check:  #Real star!
-        Match.append([X2[counter],Y2[counter],val2[counter]])
-        val2[counter] = 0
-    else:   #Fake light!
-        df1.drop(index = i, inplace = True)
-                
-    
-       
+    j = idx12[i][0]  # best match in df2
 
-df1.index = range(len(df1)) #Reindexing dataframe
+    # mutual check
+    if idx21[j][0] == i and j not in used_df2:
+        matched_df1.append(i)
+        matched_df2.append(j)
+        used_df2.add(j)
 
-Match_df = pd.DataFrame(Match ,columns =[ 'X9','Y9', 'val9' ])
+# ---------------------------
+# Build results
+# ---------------------------
+df1_matched = df1.iloc[matched_df1].reset_index(drop=True)
+df2_matched = df2.iloc[matched_df2].reset_index(drop=True)
 
-result=pd.concat([df1, Match_df], axis=1)   #Merging Data
+df2_matched.columns = [c + "_match" for c in df2_matched.columns]
 
-#Export to exel
-datatoexcel = pd.ExcelWriter('Data9.xlsx')
-result.to_excel(datatoexcel)
-datatoexcel.save()
+result = pd.concat([df1_matched, df2_matched], axis=1)
+
+# ---------------------------
+# Save
+# ---------------------------
+result.to_excel("Data9.xlsx", index=False)
