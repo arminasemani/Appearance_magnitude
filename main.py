@@ -6,16 +6,25 @@ Original: May 23 2022
 @author: armin
 """
 
+from pathlib import Path
 import sys
 import cv2
 import numpy as np
 import pandas as pd
 
+PROJECT_DIR = Path(__file__).resolve().parent
+print(PROJECT_DIR)
+
+IMAGE = "IMG_3"
+IMG_IMPORT = IMAGE + ".jpg"
+IMG_EXPORT = IMAGE + ".xlsx"
 
 # ── Load image ────────────────────────────────────────────────────────────────
-IMAGE_PATH = '/Users/armin/Downloads/IMG_0444.jpg'
+IMAGE_PATH : str | Path | None = PROJECT_DIR / "images" / IMG_IMPORT
+EXPORT_PATH : str | Path | None = PROJECT_DIR / "Image_process" / IMG_EXPORT
 
-img = cv2.imread("IMG_0444.jpg")
+
+img = cv2.imread(IMAGE_PATH)
 if img is None:
     sys.exit(f"Error: could not load image at '{IMAGE_PATH}'\n"
              "Check that the file exists and the path is correct.")
@@ -61,5 +70,5 @@ star_map = [
 df = pd.DataFrame(star_map, columns=['X', 'Y', 'val'])
 
 # ── Export to Excel (ExcelWriter.save() is deprecated since openpyxl 3.1) ────
-with pd.ExcelWriter('0444.xlsx', engine='openpyxl') as datatoexcel:
+with pd.ExcelWriter(EXPORT_PATH, engine='openpyxl') as datatoexcel:
     df.to_excel(datatoexcel)
