@@ -7,7 +7,9 @@ Created on Wed May 25 17:54:34 2022
 """
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from sklearn.neighbors import NearestNeighbors
+
 
 # ---------------------------
 # Load data
@@ -61,4 +63,9 @@ result = pd.concat([df1_matched, df2_matched], axis=1)
 # ---------------------------
 # Save
 # ---------------------------
-result.to_excel("Data9.xlsx", index=False)
+result_dir = Path("/result")
+result_dir.mkdir(parents=True, exist_ok=True)
+result_path = result_dir / "result.xlsx"
+
+if not result_path.exists():
+    result.to_excel(result_path, index=False)
