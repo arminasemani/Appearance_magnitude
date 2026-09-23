@@ -9,13 +9,18 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from sklearn.neighbors import NearestNeighbors
-
+PROJECT_DIR = Path(__file__).resolve().parent
 
 # ---------------------------
 # Load data
 # ---------------------------
-df1 = pd.read_excel('Data8.xlsx', index_col=0)
-df2 = pd.read_excel('0444.xlsx', index_col=0)
+image_process_dir_1 : str | Path | None = PROJECT_DIR / "Image_process" / 'result.xlsx'
+image_process_dir_2 : str | Path | None = PROJECT_DIR / "Image_process" / 'IMG_10.xlsx'
+
+
+
+df1 = pd.read_excel(image_process_dir_1 , index_col=0)
+df2 = pd.read_excel(image_process_dir_2 , index_col=0)
 
 # Extract feature vectors
 X1 = df1[['X', 'Y', 'val']].to_numpy()
@@ -58,14 +63,15 @@ df2_matched = df2.iloc[matched_df2].reset_index(drop=True)
 
 df2_matched.columns = [c + "_match" for c in df2_matched.columns]
 
+
 result = pd.concat([df1_matched, df2_matched], axis=1)
 
 # ---------------------------
 # Save
 # ---------------------------
-result_dir = Path("/result")
-result_dir.mkdir(parents=True, exist_ok=True)
+result_dir : str | Path | None = PROJECT_DIR / 'Image_process'
+Path(result_dir).mkdir(parents=True, exist_ok=True)
 result_path = result_dir / "result.xlsx"
 
-if not result_path.exists():
-    result.to_excel(result_path, index=False)
+
+result.to_excel(result_path, index=True)

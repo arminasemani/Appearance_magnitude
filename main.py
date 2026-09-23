@@ -15,7 +15,7 @@ import pandas as pd
 PROJECT_DIR = Path(__file__).resolve().parent
 print(PROJECT_DIR)
 
-IMAGE = "IMG_3"
+IMAGE = "IMG_10"
 IMG_IMPORT = IMAGE + ".jpg"
 IMG_EXPORT = IMAGE + ".xlsx"
 
